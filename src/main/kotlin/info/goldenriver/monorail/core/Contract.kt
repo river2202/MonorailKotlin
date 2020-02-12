@@ -32,11 +32,13 @@ data class Interaction (
 data class Request (val method: String,
                     var path: String,
                     val headers: Map<String, String> = emptyMap(),
-                    val body: Any? = null
+                    val body: Any? = null,
+                    val data: String? = null
 )
 
 data class Response (
     val status: Int,
     val headers: Map<String, String> = emptyMap(),
-    val body: Any? = null
+    val body: Any? = null,
+    val data: String? = null
 )

@@ -31,12 +31,6 @@ fun enableLogging() {
 
 class HelloTest {
 
-    fun getFileContent(fileName: String): String {
-        val file = File(javaClass.classLoader.getResource(fileName).file)
-        val content =  file.readText()
-        return content
-    }
-
     @Test
     fun testGetRequest() {
         enableLogging()
@@ -44,16 +38,6 @@ class HelloTest {
         val httpbinGet = httpbin.get()
 
         assertEquals("https://httpbin.org/get", httpbinGet?.url)
-    }
-
-    @Test
-    fun testMonorailReader() {
-        val content = getFileContent("quoteOfTheDay.json")
-        val reader = Reader(content)
-        assertEquals(
-            1,
-            actual = reader.contract?.interactions?.count()
-        )
     }
 
 }

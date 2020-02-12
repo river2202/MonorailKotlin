@@ -5,11 +5,11 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.KotlinModule
 import com.fasterxml.jackson.module.kotlin.readValue
 
-interface ReaderDelegate {
-    fun matchRequest(request: Request?, interaction: Interaction) : Boolean
-}
-
 open class Reader {
+
+    interface ReaderDelegate {
+        fun matchRequest(request: Request?, interaction: Interaction) : Boolean
+    }
 
     private val mapper: ObjectMapper = ObjectMapper().registerModule(KotlinModule())
     var readDelegate: ReaderDelegate? = null
@@ -39,8 +39,8 @@ open class Reader {
 
     fun getResponse(request: Request?) : Response? {
         val request = request ?: return null
-        val matchedInteractions = contract?.interactions?.filter({ (readDelegate?.matchRequest(request, it) ?: false) || it.matchRequest(request) })
-        val bestMatch = matchedInteractions?.filter({ !it.consumed })?.firstOrNull() ?: matchedInteractions?.lastOrNull()
+        val matchedInteractions = contract?.interactions?.filter { (readDelegate?.matchRequest(request, it) ?: false) || it.matchRequest(request) }
+        val bestMatch = matchedInteractions?.firstOrNull { !it.consumed } ?: matchedInteractions?.lastOrNull()
         bestMatch?.consumed = true
         return bestMatch?.response
     }

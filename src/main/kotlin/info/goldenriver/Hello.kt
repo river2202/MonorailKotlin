@@ -23,13 +23,15 @@ open class Httpbin {
         }
 
         val request = requestFactory.buildGetRequest(GenericUrl("https://httpbin.org/get"))
-        return request.execute().parseAs(Get::class.java)
-    }
 
+        request.interceptor
+        val response = request.execute()
+
+        return response.parseAs(Get::class.java)
+    }
 }
 
 fun main(args: Array<String>) {
     println("Hello, World")
-
 }
 

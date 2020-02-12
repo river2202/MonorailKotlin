@@ -1,21 +1,10 @@
 package com.google.api.client.http
 
-
-import com.google.api.client.http.javanet.ConnectionFactory
-import com.google.api.client.http.javanet.DefaultConnectionFactory
-import com.google.api.client.http.javanet.NetHttpTransport
-import com.google.api.client.util.Beta
-import com.google.api.client.util.SecurityUtils
-import com.google.api.client.util.SslUtils
+import com.google.api.client.util.FieldInfo
+import com.google.api.client.util.Preconditions
+import com.google.api.client.util.Types
 import java.io.IOException
-import java.io.InputStream
-import java.net.HttpURLConnection
-import java.net.Proxy
-import java.security.GeneralSecurityException
-import java.security.KeyStore
 import java.util.*
-import javax.net.ssl.HostnameVerifier
-import javax.net.ssl.SSLSocketFactory
 
 class MonorailNetHttpTransport (
     private val transport: HttpTransport
@@ -30,4 +19,70 @@ class MonorailNetHttpTransport (
     override fun buildRequest(method: String, url: String): LowLevelHttpRequest {
         return transport.buildRequest(method, url)
     }
+
+    override fun buildRequest(): HttpRequest? {
+        return HttpRequest(this, null as String?).apply {
+            setInterceptor {
+                println("-------------- REQUEST  --------------")
+                println("${it.requestMethod} ${it.url}")
+                serializeHeaders(it.headers)
+            }
+        }
+    }
+
+
+    @Throws(IOException::class)
+    fun serializeHeaders(
+        headers: HttpHeaders
+    ): MutableMap<String, Any> {
+        var headerMap: MutableMap<String, Any> = emptyMap<String, Any> ().toMutableMap()
+        val headerNames: HashSet<String?> = HashSet<String?>()
+        val `i$`: Iterator<*> = headers.entries.iterator()
+        while (true) {
+            while (true) {
+                var name: String
+                var value: Any
+                do {
+                    if (!`i$`.hasNext()) {
+                        return headerMap
+                    }
+                    val headerEntry: Map.Entry<String, Any> =
+                        `i$`.next() as Map.Entry<String, Any>
+                    name = headerEntry.key
+                    Preconditions.checkArgument(
+                        headerNames.add(name),
+                        "multiple headers of the same name (headers are case insensitive): %s",
+                        *arrayOf<Any?>(name)
+                    )
+                    value = headerEntry.value
+                } while (value == null)
+                var displayName = name
+                val fieldInfo = headers.classInfo.getFieldInfo(name)
+                if (fieldInfo != null) {
+                    displayName = fieldInfo.name
+                }
+                val valueClass: Class<out Any> = value.javaClass
+                if (value !is Iterable<*> && !valueClass.isArray) {
+                    headerMap[displayName] = value
+                    print("$displayName ${toStringValue(value)}")
+                } else {
+                    val `i$`: Iterator<*> =
+                        Types.iterableOf<Any>(value).iterator()
+                    while (`i$`.hasNext()) {
+                        val repeatedValue = `i$`.next()!!
+                        headerMap[displayName] = value
+                        println("$displayName: ${toStringValue(value)}")
+                    }
+                }
+            }
+        }
+
+        return headerMap
+    }
+
+    private fun toStringValue(headerValue: Any): String? {
+        return if (headerValue is Enum<*>) FieldInfo.of(headerValue).name else headerValue.toString()
+    }
+
+
 }
