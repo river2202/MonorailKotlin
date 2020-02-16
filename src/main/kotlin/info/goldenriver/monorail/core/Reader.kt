@@ -12,7 +12,7 @@ open class Reader {
     }
 
     private val mapper: ObjectMapper = ObjectMapper().registerModule(KotlinModule())
-    var readDelegate: ReaderDelegate? = null
+    private var readDelegate: ReaderDelegate? = null
     var contract: Contract? = null
 
 

@@ -9,8 +9,11 @@ class WriterTest : TestCase() {
     fun testWriteLog() {
         enableLogging()
         val httpbin = Httpbin()
-        val httpbinGet = httpbin.get()
-        assertEquals("https://httpbin.org/get", httpbinGet?.url)
+        //val httpbinGet = httpbin.get()
+        val httpbinPost = httpbin.post()
+        //assertEquals("https://httpbin.org/get", httpbinGet?.url)
+
+        assertEquals("https://httpbin.org/get", httpbinPost?.url)
     }
 
 }

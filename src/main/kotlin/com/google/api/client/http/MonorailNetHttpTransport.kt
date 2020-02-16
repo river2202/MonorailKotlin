@@ -17,17 +17,31 @@ class MonorailNetHttpTransport (
 
     @Throws(IOException::class)
     override fun buildRequest(method: String, url: String): LowLevelHttpRequest {
-        return transport.buildRequest(method, url)
+        return MonorailNetHttpRequest(method, url, transport.buildRequest(method, url))
     }
 
-    override fun buildRequest(): HttpRequest? {
-        return HttpRequest(this, null as String?).apply {
-            setInterceptor {
-                println("-------------- REQUEST  --------------")
-                println("${it.requestMethod} ${it.url}")
-                serializeHeaders(it.headers)
-            }
-        }
+//    override fun buildRequest(): HttpRequest? {
+//        return HttpRequest(this, null as String?)
+////            .apply {
+////            setResponseInterceptor {
+//////                log(it.request)
+//////                log(it)
+////            }
+//        }
+//    }
+
+    private fun log(request: HttpRequest) {
+        println("-------------- Monorail - REQUEST  --------------")
+        println("${request.requestMethod} ${request.url}")
+        serializeHeaders(request.headers)
+        println("-------------- Monorail - REQUEST - end  --------------")
+    }
+
+    private fun log(response: HttpResponse) {
+        println("-------------- Monorail - RESPONSE  --------------")
+//        println("${response.requestMethod} ${response.url}")
+        serializeHeaders(response.headers)
+        println("-------------- Monorail - RESPONSE -end  --------------")
     }
 
 
@@ -70,8 +84,8 @@ class MonorailNetHttpTransport (
                         Types.iterableOf<Any>(value).iterator()
                     while (`i$`.hasNext()) {
                         val repeatedValue = `i$`.next()!!
-                        headerMap[displayName] = value
-                        println("$displayName: ${toStringValue(value)}")
+                        headerMap[displayName] =  repeatedValue
+                        println("$displayName: ${toStringValue(repeatedValue)}")
                     }
                 }
             }

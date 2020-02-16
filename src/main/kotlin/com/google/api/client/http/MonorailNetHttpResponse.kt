@@ -6,135 +6,60 @@ import java.io.InputStream
 import java.net.HttpURLConnection
 import java.util.*
 
-internal class MonorailNetHttpResponse(private val connection: HttpURLConnection) :
+internal class MonorailNetHttpResponse(private val lowLevelHttpResponse: LowLevelHttpResponse) :
     LowLevelHttpResponse() {
-    private val responseCode: Int
-    private var responseMessage: String
-    private val headerNames = ArrayList<String?>()
-    private val headerValues = ArrayList<String?>()
 
     override fun getStatusCode(): Int {
-        return responseCode
+        return lowLevelHttpResponse.statusCode
     }
 
     @Throws(IOException::class)
     override fun getContent(): InputStream? {
-        var `in`: InputStream? = null
-        `in` = try {
-            connection.inputStream
-        } catch (var3: IOException) {
-            connection.errorStream
-        }
-        return `in`?.let { SizeValidatingInputStream(it) }
+        return lowLevelHttpResponse.content
     }
 
-    override fun getContentEncoding(): String {
-        return connection.contentEncoding
+    @Throws(IOException::class)
+    override fun getContentEncoding(): String? {
+        return lowLevelHttpResponse.contentEncoding
     }
 
+    @Throws(IOException::class)
     override fun getContentLength(): Long {
-        val string = connection.getHeaderField("Content-Length")
-        return string?.toLong() ?: -1L
+        return lowLevelHttpResponse.contentLength
     }
 
+    @Throws(IOException::class)
     override fun getContentType(): String {
-        return connection.getHeaderField("Content-Type")
+        return lowLevelHttpResponse.contentType
     }
 
+    @Throws(IOException::class)
     override fun getReasonPhrase(): String {
-        return responseMessage
+        return lowLevelHttpResponse.reasonPhrase
     }
 
+    @Throws(IOException::class)
     override fun getStatusLine(): String? {
-        val result = connection.getHeaderField(0)
-        return if (result != null && result.startsWith("HTTP/1.")) result else null
+        return lowLevelHttpResponse.statusLine
     }
 
+    @Throws(IOException::class)
     override fun getHeaderCount(): Int {
-        return headerNames.size
+        return lowLevelHttpResponse.headerCount
     }
 
+    @Throws(IOException::class)
     override fun getHeaderName(index: Int): String {
-        return headerNames[index] as String
+        return lowLevelHttpResponse.getHeaderName(index)
     }
 
+    @Throws(IOException::class)
     override fun getHeaderValue(index: Int): String {
-        return headerValues[index] as String
+        return lowLevelHttpResponse.getHeaderValue(index)
     }
 
+    @Throws(IOException::class)
     override fun disconnect() {
-        connection.disconnect()
-    }
-
-    private inner class SizeValidatingInputStream(`in`: InputStream?) :
-        FilterInputStream(`in`) {
-        private var bytesRead = 0L
-        @Throws(IOException::class)
-        override fun read(b: ByteArray, off: Int, len: Int): Int {
-            val n = `in`.read(b, off, len)
-            if (n == -1) {
-                throwIfFalseEOF()
-            } else {
-                bytesRead += n.toLong()
-            }
-            return n
-        }
-
-        @Throws(IOException::class)
-        override fun read(): Int {
-            val n = `in`.read()
-            if (n == -1) {
-                throwIfFalseEOF()
-            } else {
-                ++bytesRead
-            }
-            return n
-        }
-
-        @Throws(IOException::class)
-        private fun throwIfFalseEOF() {
-            val contentLength = this@MonorailNetHttpResponse.contentLength
-            if (contentLength != -1L) {
-                if (bytesRead != 0L && bytesRead < contentLength) {
-                    val var3 = bytesRead
-                    throw IOException(
-                        StringBuilder(102).append("Connection closed prematurely: bytesRead = ").append(
-                            var3
-                        ).append(", Content-Length = ").append(contentLength).toString()
-                    )
-                }
-            }
-        }
-    }
-
-    init {
-        val responseCode = connection.responseCode
-        this.responseCode = if (responseCode == -1) 0 else responseCode
-        this.responseMessage = connection.responseMessage
-        val headerNames: MutableList<String?> = headerNames
-        val headerValues: MutableList<String?> = headerValues
-        val `i$` = connection.headerFields.entries.iterator()
-
-        run {
-            while (true) {
-                var entry: Map.Entry<*, *>
-                var key: String?
-                do {
-                    if (!`i$`.hasNext()) {
-                        return@run
-                    }
-                    entry = `i$`.next() as Map.Entry<*, *>
-                    key = entry.key as String?
-                } while (key == null)
-                val `i$` = (entry.value as List<*>).iterator()
-                while (`i$`.hasNext()) {
-                    val value = `i$`.next() as String?
-                    if (value != null) {
-                        headerNames.add(key)
-                        headerValues.add(value)
-                    }
-                }
-            }
-        }
+        lowLevelHttpResponse.disconnect()
     }
 }
